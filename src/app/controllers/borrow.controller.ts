@@ -2,6 +2,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { Borrow } from '../models/borrow.model';
 import { Book } from '../models/book.model';
+import { promises } from 'dns';
 
 // GET /api/borrow - Borrowed Books Summary using Aggregation
 export const getBorrowSummary = async (req: Request, res: Response, next: NextFunction) => {
@@ -45,34 +46,37 @@ export const getBorrowSummary = async (req: Request, res: Response, next: NextFu
 };
 
 // POST /api/borrow - Borrow a Book
-export const borrowBook = async (req: Request, res: Response, next: NextFunction) => {
+export const borrowBook = async (req: Request, res: Response, next: NextFunction):Promise<void> => {
   try {
     const { book: bookId, quantity, dueDate } = req.body;
 
     // Validate input
     if (!bookId || !quantity || !dueDate) {
-      return res.status(400).json({
+       res.status(400).json({
         success: false,
         message: 'All fields (book, quantity, dueDate) are required',
         error: 'BadRequest',
       });
+      return
     }
 
     const book = await Book.findById(bookId);
     if (!book) {
-      return res.status(404).json({
+       res.status(404).json({
         success: false,
         message: 'Book not found',
         error: 'NotFound',
       });
+      return
     }
 
     if (book.copies < quantity) {
-      return res.status(400).json({
+       res.status(400).json({
         success: false,
         message: 'Not enough copies available',
         error: 'InsufficientStock',
       });
+      return
     }
 
     // Update book inventory
